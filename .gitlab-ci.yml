@@ -1,0 +1,75 @@
+# Definindo imagem base para os jobs que precisam de Python
+image: python:3.11-slim
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+
+cache:
+  key:
+    files:
+      - requirements.txt
+  paths:
+    - .cache/pip
+    - .venv/
+
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+# Script executado antes de cada job, garantindo ambiente preparado
+before_script:
+  - pip install uv --quiet
+  - uv venv .venv
+  - source .venv/bin/activate
+  - uv pip install -r requirements.txt --quiet
+  - apt-get update && apt-get install -y --no-install-recommends libnss3 libxss1 libasound2 libgbm1 libgtk-3-0
+  - playwright install chromium
+
+# 1. Stage de Linting: Falha se houver erros (Ruff)
+lint:
+  stage: lint
+  script:
+    - echo "→ Rodando linter Ruff..."
+    - ruff check scraper/ tests/
+  allow_failure: false
+
+# 2. Stage de Testes: Falha se cobertura < 70% ou teste quebrar
+test:
+  stage: test
+  script:
+    - echo "→ Rodando testes unitários..."
+    - pytest --cov=scraper --cov-report=term-missing --cov-fail-under=70
+  coverage: '/TOTAL.*\s+(\d+%)$/'
+  allow_failure: false
+
+# 3. Stage de Build: Constroi a imagem Docker e faz o push
+build:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "→ Construindo imagem Docker..."
+    - docker build -t $IMAGE_TAG -t $IMAGE_LATEST .
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_LATEST
+  allow_failure: false
+
+# 4. Stage de Deploy: Simulação para AWS ECS
+deploy:
+  stage: deploy
+  image: amazon/aws-cli:latest
+  before_script: []
+  script:
+    - echo "→ Simulando deploy para AWS ECS..."
+    - echo "aws ecs update-service --cluster meu-cluster --service meu-scraper-service --force-new-deployment"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'

@@ -1,0 +1,11 @@
+# Core
+typer
+rich
+pydantic
+playwright
+groq
+
+# Testes
+pytest
+pytest-asyncio
+pytest-cov

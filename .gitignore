@@ -1,0 +1,36 @@
+# --- Ambientes Virtuais ---
+venv/
+.venv/
+env/
+.env
+
+# --- Python & Bytecode ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# --- Playwright & Browsers ---
+# Ignora o download dos navegadores, eles devem ser instalados pelo CI/CD ou Docker
+ms-playwright/
+.cache/ms-playwright/
+
+# --- Cobertura e Testes ---
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.nox/
+
+# --- Artefatos e Output ---
+output/
+!output/.gitkeep # Opcional: mantem a pasta output se você criar um arquivo .gitkeep nela
+
+# --- Docker & IDE ---
+.docker/
+.vscode/
+.idea/
+.DS_Store
+
+# --- Logs ---
+*.log
