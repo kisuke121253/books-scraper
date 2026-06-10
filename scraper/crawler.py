@@ -98,7 +98,7 @@ async def run_playwright_scraper(
             if await next_btn.count() > 0:
                 next_url = await next_btn.first.get_attribute("href")
                 if "category" in current_page_url:
-                    base_path = current_page_url.rsplit("/", 1)
+                    base_path = current_page_url.rsplit("/", 1)[0]
                     current_page_url = f"{base_path}/{next_url}"
                 else:
                     current_page_url = f"{BASE_URL}/catalogue/{next_url}"
