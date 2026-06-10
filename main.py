@@ -4,7 +4,9 @@ import typer
 from rich.logging import RichHandler
 from scraper.pipeline import run as pipeline_run
 from rich import print as rprint
+from dotenv import load_dotenv
 
+load_dotenv()
 app = typer.Typer(help="Scraper assíncrono para books.toscrape.com")
 
 def _setup_logging(verbose: bool) -> None:
